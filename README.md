@@ -36,6 +36,8 @@ Example, to mount at `/home/kdas/secured` I will execute:
 
 In the first run, it will give you the key for your encrypted storage, keep the key safe as you can not access your files without the key.
 
+Note: The current implementation of the filesystem can only store files in the top level directory, this will be fixed in the coming days.
+
 ## License
 
 GPLv3+
