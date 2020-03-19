@@ -15,6 +15,7 @@ from time import time
 import argparse
 import pickle
 import getpass
+import platform
 
 from pprint import pprint
 
@@ -33,6 +34,7 @@ class ManualBoxFS(LoggingMixIn, Operations):
     """
 
     def __init__(self, key=b"", mountpath="", storagepath=""):
+        self.platform = platform.system()
         self.locker = Fernet(key)
         self.mountpath = mountpath
         self.files = {}
@@ -126,6 +128,14 @@ class ManualBoxFS(LoggingMixIn, Operations):
         self.fd += 1
         if self.fd > 64000:
             self.fd = 1025
+
+        # In Mac, we found that it is doing the open call every time, but not the read call.
+        # The following will make sure that the user input happens in that case, but, sadly it
+        # also means that user input will be required.
+        if self.platform == "Darwin":
+            result = self.manualquestion(path, self.fd)
+            if not result:
+                raise FuseOSError(errno.EIO)
         return self.fd
 
     def read(self, path, size, offset, fh):
@@ -133,36 +143,10 @@ class ManualBoxFS(LoggingMixIn, Operations):
         This method helps to read any file. We intercept this syscall in our project.
         """
         # We need the display with the correct mount path
-        display_path = os.path.join(self.mountpath, path[1:])
-        key = f"{path}:{fh}"
-
-        now = time()
-        allowforthistime = False
-        if key in self.access_records:
-            value, allow = self.access_records[key]
-
-            # this 30 seconds is a magic number for now
-            if now - value < 30:
-                if not allow:
-                    return FuseOSError(errno.EIO)
-                else:
-                    allowforthistime = True
-
-        # if allowed then continue reading
-        if not allowforthistime:
-            try:
-                result = subprocess.check_output(
-                    ["/usr/bin/manualboxinput", display_path]
-                )
-            except:
-                self.access_records[key] = (now, False)
-                return FuseOSError(errno.EIO)
-            if result != b"okay\n":
-                self.access_records[key] = (now, False)
-                return FuseOSError(errno.EIO)
-
-        # store the value for the next read call
-        self.access_records[key] = (now, True)
+        if self.playform != "Darwin":
+            result = self.manualquestion(path, fh)
+            if not result:
+                raise FuseOSError(errno.EIO)
         return self.data[path][offset : offset + size]
 
     def readdir(self, path, fh):
@@ -247,12 +231,50 @@ class ManualBoxFS(LoggingMixIn, Operations):
             fobj.write(encrypted)
         print("Encryption and storage is successful.")
 
+    def manualquestion(self, path, fh):
+        if self.platform == "Darwin":
+            cmdpath = "/usr/local/bin/manualboxinput"
+        else:
+            cmdpath = "/usr/bin/manualboxinput"
+        print(f"manualquestion is called for {path} with {fh}")
+        display_path = os.path.join(self.mountpath, path[1:])
+        key = f"{path}:{fh}"
+        print(key)
+        now = time()
+        allowforthistime = False
+        if key in self.access_records:
+            value, allow = self.access_records[key]
+
+            # this 30 seconds is a magic number for now
+            if now - value < 30:
+                if not allow:
+                    return FuseOSError(errno.EIO)
+                else:
+                    allowforthistime = True
+
+        # if allowed then continue reading
+        if not allowforthistime:
+            try:
+                result = subprocess.check_output(
+                    ["/usr/local/bin/manualboxinput", display_path]
+                )
+            except:
+                self.access_records[key] = (now, False)
+                return False
+            if result != b"okay\n":
+                self.access_records[key] = (now, False)
+                return False
+
+        # store the value for the next read call
+        self.access_records[key] = (now, True)
+        return True
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("mount")
     args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO, filename="/dev/null")
+    logging.basicConfig(level=logging.INFO, filename="/tmp/test.log")
     home = str(Path.home())
     storagepath = os.path.join(home, ".manualbox")
     if os.path.exists(storagepath):
