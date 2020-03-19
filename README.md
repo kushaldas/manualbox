@@ -7,7 +7,7 @@ of any file will require user input via a GUI tool.
 
 First we will need all the dependencies:
 
-On Debian
+### On Debian
 
 ```sh
 sudo apt install python3-cryptography python3-pyqt5 python3-fusepy
@@ -18,6 +18,32 @@ Now, for development purpose, you will have to create a symlink to our user inpu
 ```sh
 sudo ln -s $PWD/devscripts/manualboxinput /usr/bin/manualboxinput
 ```
+
+### On Mac
+
+First install the [FUSE for Mac](https://osxfuse.github.io/) with Macfuse layer.
+
+Then install Python3.7.6 from https://python.org
+
+After this, install `poetry`.
+
+```sh
+pip3 install --user poetry
+```
+
+Then install the tool locally:
+
+```sh
+poetry install
+```
+
+Now, for development purpose, you will have to create a symlink to our user input script into `/usr/local/bin/`
+
+```sh
+sudo ln -s $PWD/devscripts/manualboxinput /usr/local/bin/manualboxinput
+```
+
+Note: On Mac, the system will ask for user input when any tool will try to open the file for both reading and writing.
 
 ### Usage
 
