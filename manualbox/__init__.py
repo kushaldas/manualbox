@@ -143,7 +143,7 @@ class ManualBoxFS(LoggingMixIn, Operations):
         This method helps to read any file. We intercept this syscall in our project.
         """
         # We need the display with the correct mount path
-        if self.playform != "Darwin":
+        if self.platform != "Darwin":
             result = self.manualquestion(path, fh)
             if not result:
                 raise FuseOSError(errno.EIO)
@@ -236,28 +236,23 @@ class ManualBoxFS(LoggingMixIn, Operations):
             cmdpath = "/usr/local/bin/manualboxinput"
         else:
             cmdpath = "/usr/bin/manualboxinput"
-        print(f"manualquestion is called for {path} with {fh}")
+        logging.debug(f"manualquestion is called for {path} with {fh}")
         display_path = os.path.join(self.mountpath, path[1:])
         key = f"{path}:{fh}"
-        print(key)
         now = time()
         allowforthistime = False
         if key in self.access_records:
             value, allow = self.access_records[key]
-
             # this 30 seconds is a magic number for now
             if now - value < 30:
                 if not allow:
-                    return FuseOSError(errno.EIO)
+                    return False
                 else:
                     allowforthistime = True
-
         # if allowed then continue reading
         if not allowforthistime:
             try:
-                result = subprocess.check_output(
-                    ["/usr/local/bin/manualboxinput", display_path]
-                )
+                result = subprocess.check_output([cmdpath, display_path])
             except:
                 self.access_records[key] = (now, False)
                 return False
