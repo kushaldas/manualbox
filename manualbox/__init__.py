@@ -5,6 +5,7 @@ import logging
 import subprocess
 
 import os
+import sys
 import errno
 from pathlib import Path
 from collections import defaultdict
@@ -16,10 +17,11 @@ import argparse
 import pickle
 import getpass
 import platform
+import binascii
 
 from pprint import pprint
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 try:
     # This is for Debian/Ubuntu
@@ -32,6 +34,8 @@ class ManualBoxFS(LoggingMixIn, Operations):
     """
     ManualBoxFS will stay on memory till it is closed.
     """
+
+    error = True
 
     def __init__(self, key=b"", mountpath="", storagepath=""):
         self.platform = platform.system()
@@ -65,6 +69,7 @@ class ManualBoxFS(LoggingMixIn, Operations):
                 files, data = pickle.loads(decrypted_data)
                 self.files = files
                 self.data = data
+        self.error = False
         print(f"\nYour storage is now mounted at {mountpath}. Press Ctrl+C to unmount.")
 
     def chmod(self, path, mode):
@@ -221,6 +226,10 @@ class ManualBoxFS(LoggingMixIn, Operations):
 
     def __del__(self):
         "We will have to save the Filesystem on disk here."
+        # This is incase of an error in decryption of the ~/.manualbox
+        if self.error:
+            return
+
         # First dump into pickle
         localdata = pickle.dumps((self.files, self.data))
         # Now, we encrypt
@@ -283,13 +292,17 @@ def main():
         timemodule.sleep(1)
         key = Fernet.generate_key()
         print(f"Here is your new key, please store it securely: {key}")
-    fuse = FUSE(
-        ManualBoxFS(key=key, mountpath=args.mount, storagepath=storagepath),
-        args.mount,
-        foreground=True,
-        nothreads=True,
-        allow_other=False,
-    )
+    try:
+        fuse = FUSE(
+            ManualBoxFS(key=key, mountpath=args.mount, storagepath=storagepath),
+            args.mount,
+            foreground=True,
+            nothreads=True,
+            allow_other=False,
+        )
+    except (ValueError, InvalidToken, binascii.Error):
+        print("Wrong key for the ~/.manualbox")
+        sys.exit(-3)
 
 
 if __name__ == "__main__":
