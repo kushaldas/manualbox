@@ -19,11 +19,15 @@ Now, for development purpose, you will have to create a symlink to our user inpu
 sudo ln -s $PWD/devscripts/manualboxinput /usr/bin/manualboxinput
 ```
 
-### On Mac
+### On macOS
 
-First install the [FUSE for Mac](https://osxfuse.github.io/) with Macfuse layer.
+Install Xcode from the Mac App Store. Once it's installed, run it for the first time to set it up. Also, run this to make sure command line tools are installed: `xcode-select --install`. And finally, open Xcode, go to `Preferences > Locations`, and make sure under Command Line Tools you select an installed version from the dropdown. (This is required for installing Qt5.)
 
-Then install Python3.7.6 from https://python.org
+Install Qt 5.14.1 for macOS from https://www.qt.io/offline-installers. I downloaded `qt-opensource-mac-x64-5.14.1.dmg`. In the installer, and all you need is `Qt > Qt 5.14.1 > macOS`.
+
+Then install the [FUSE for Mac](https://osxfuse.github.io/) with Macfuse layer.
+
+Then install [Python 3.7.6](https://www.python.org/downloads/release/python-376/).
 
 After this, install `poetry`.
 
@@ -58,6 +62,12 @@ Example, to mount at `/home/kdas/secured` I will execute:
 
 ```sh
 ./devscripts/manualbox /home/kdas/secured
+```
+
+On macOS
+
+```sh
+poetry run ./devscripts/manualbox /User/kdas/secured
 ```
 
 In the first run, it will give you the key for your encrypted storage, keep the key safe as you can not access your files without the key.
