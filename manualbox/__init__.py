@@ -126,6 +126,8 @@ class ManualBoxFS(LoggingMixIn, Operations):
             st_ctime=time(),
             st_mtime=time(),
             st_atime=time(),
+            st_uid=os.getuid(),
+            st_gid=os.getgid(),
         )
 
         self.files["/"]["st_nlink"] += 1
@@ -156,9 +158,29 @@ class ManualBoxFS(LoggingMixIn, Operations):
         return self.data[path][offset : offset + size]
 
     def readdir(self, path, fh):
-        names = [".", ".."] + [x[1:] for x in self.files if x != "/"]
-        for name in names:
-            yield name
+        names = [".", ".."]
+        if path != "/":
+            for x in self.files:
+                if x != "/":
+                    if x.startswith(f"{path}/"):
+                        name = ""
+                        # now we should skip any files/directories one level below
+                        length = len(path) + 1
+                        if len(x) > length:
+                            name = x[length:]
+                            if name.find("/") != -1:  # Means another directory
+                                continue
+                        else:
+                            name = x[1:]
+                        names.append(name)
+
+        else:
+            for x in self.files:
+                if x == "/":
+                    continue
+                if x.count("/") == 1:
+                    names.append(x[1:])
+        return names
 
     def readlink(self, path):
         return self.data[path]
@@ -279,7 +301,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("mount")
     args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO, filename="/tmp/test.log")
+    logging.basicConfig(level=logging.INFO, filename="/dev/null")
     home = str(Path.home())
     storagepath = os.path.join(home, ".manualbox")
     if os.path.exists(storagepath):
