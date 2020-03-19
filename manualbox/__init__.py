@@ -65,6 +65,7 @@ class ManualBoxFS(LoggingMixIn, Operations):
                 files, data = pickle.loads(decrypted_data)
                 self.files = files
                 self.data = data
+        print(f"\nYour storage is now mounted at {mountpath}. Press Ctrl+C to unmount.")
 
     def chmod(self, path, mode):
         self.files[path]["st_mode"] &= 0o770000
