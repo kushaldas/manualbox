@@ -1,0 +1,5 @@
+include manualbox/*.py
+include manualbox/assets/mainicon.png
+include LICENSE
+include README.md
+include setup.py
