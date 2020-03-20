@@ -313,7 +313,8 @@ def main():
         print(msg)
         timemodule.sleep(1)
         key = Fernet.generate_key()
-        print(f"Here is your new key, please store it securely: {key}")
+        key_text = key.decode("utf-8")
+        print(f"Here is your new key, please store it securely: {key_text}")
     try:
         fuse = FUSE(
             ManualBoxFS(key=key, mountpath=args.mount, storagepath=storagepath),
