@@ -208,7 +208,23 @@ class ManualBoxFS(LoggingMixIn, Operations):
         attrs[name] = value
 
     def statfs(self, path):
-        return dict(f_bsize=512, f_blocks=4096, f_bavail=2048)
+        """
+        We return the stat of the home directory of the user.
+        """
+        st = os.statvfs(Path.home())
+        result = {
+            "f_bsize": st.f_bsize,
+            "f_frsize": st.f_frsize,
+            "f_blocks": st.f_blocks,
+            "f_bfree": st.f_bfree,
+            "f_bavail": st.f_bavail,
+            "f_files": st.f_files,
+            "f_ffree": st.f_ffree,
+            "f_favail": st.f_favail,
+            "f_flag": st.f_flag,
+            "f_namemax": st.f_namemax,
+        }
+        return result
 
     def symlink(self, target, source):
         self.files[target] = dict(
