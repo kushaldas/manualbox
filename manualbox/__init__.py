@@ -2,6 +2,7 @@
 from __future__ import print_function, absolute_import, division
 
 import logging
+import subprocess
 
 import os
 import sys
@@ -22,13 +23,28 @@ from pprint import pprint
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from . import manualboxinput
+from . import manualboxinput, userwindow
 
 try:
     # This is for Debian/Ubuntu
     from fusepy import FUSE, FuseOSError, Operations, LoggingMixIn
 except ModuleNotFoundError:
     from fuse import FUSE, FuseOSError, Operations, LoggingMixIn
+
+    from PyQt5 import QtGui, QtWidgets, QtCore
+
+
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+import sys
+import os
+
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+
+def get_asset_path(file_name):
+    "Return the absolute path for requested asset"
+    return os.path.join(BASE_PATH, "assets", file_name)
 
 
 class ManualBoxFS(LoggingMixIn, Operations):
@@ -38,7 +54,8 @@ class ManualBoxFS(LoggingMixIn, Operations):
 
     error = True
 
-    def __init__(self, key=b"", mountpath="", storagepath=""):
+    def __init__(self, key=b"", mountpath="", storagepath="", callback=None):
+        self.callback = callback
         self.platform = platform.system()
         self.locker = Fernet(key)
         self.mountpath = mountpath
@@ -264,6 +281,9 @@ class ManualBoxFS(LoggingMixIn, Operations):
         return len(data)
 
     def __del__(self):
+        pass
+
+    def saveondisk(self):
         "We will have to save the Filesystem on disk here."
         # This is incase of an error in decryption of the ~/.manualbox
         if self.error:
@@ -272,13 +292,11 @@ class ManualBoxFS(LoggingMixIn, Operations):
         # First dump into pickle
         localdata = pickle.dumps((self.files, self.data))
         # Now, we encrypt
-        print("\nEncrypting the data into the storage on disk.")
         encrypted = self.locker.encrypt(localdata)
 
         # Now, write it on the disk
         with open(self.storagepath, "wb") as fobj:
             fobj.write(encrypted)
-        print("Encryption and storage is successful.")
 
     def manualquestion(self, path, fh):
         """
@@ -300,7 +318,10 @@ class ManualBoxFS(LoggingMixIn, Operations):
         # if allowed then continue reading
         if not allowforthistime:
             try:
-                result = manualboxinput.main(display_path)
+                result = self.callback(display_path)
+                #result = manualboxinput.main(display_path)
+                print(f"RESULT: {result}")
+                #result = "okay"
             except:
                 self.access_records[key] = (now, False)
                 return False
@@ -313,35 +334,234 @@ class ManualBoxFS(LoggingMixIn, Operations):
         return True
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("mount")
-    args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO, filename="/dev/null")
-    home = str(Path.home())
-    storagepath = os.path.join(home, ".manualbox")
-    if os.path.exists(storagepath):
-        msg = f"Provide the key for the existing ManualBox storage at: {storagepath}: "
-        password = getpass.getpass(msg)
+class FSThread(QThread):
+    signal = pyqtSignal("PyQt_PyObject")
+
+
+    def __init__(self, mountpath="", password=""):
+        QThread.__init__(self)
+        self.mountpath = mountpath
+        home = str(Path.home())
+        storagepath = os.path.join(home, ".manualbox")
         key = password.encode("utf-8")
-    else:
-        msg = f"Creating a new ManualBox storage at: {storagepath}: "
-        print(msg)
-        timemodule.sleep(1)
-        key = Fernet.generate_key()
-        key_text = key.decode("utf-8")
-        print(f"Here is your new key, please store it securely: {key_text}")
-    try:
-        fuse = FUSE(
-            ManualBoxFS(key=key, mountpath=args.mount, storagepath=storagepath),
-            args.mount,
+        self.fs = ManualBoxFS(key=key, mountpath=self.mountpath, storagepath=storagepath, callback=self.ask)
+
+    def ask(self, display_path):
+        logging.debug(f"ASK called with {display_path}")
+        self.signal.emit(display_path)
+        return self.result
+
+    def updateuserinput(self, result):
+        self.result = result
+
+    def run(self):
+        try:
+            self.fuse = FUSE(
+            self.fs,
+            self.mountpath,
             foreground=True,
             nothreads=True,
             allow_other=False,
+            )
+        except (ValueError, InvalidToken, binascii.Error):
+            print("Wrong key for the ~/.manualbox")
+
+
+
+
+class MainUserWindow(QtWidgets.QMainWindow):
+    userinput = pyqtSignal("PyQt_PyObject")
+    CSS = """
+            QLabel#filepath {
+                color: black;
+                font-size: 25px;
+                background-color: rgb(255,255,255);
+            }
+            QLabel {
+                background-color: rgb(255,255,255);
+            }
+
+            QPushButton {
+                background-color: rgb(255,255,255);
+            }
+            QWidget {
+                background-color: rgb(255,255,255);
+            }
+
+    """
+
+    def __init__(self, parent=None):
+        self.home = str(Path.home())
+        storagepath = os.path.join(self.home, ".manualbox")
+        self.mounted = False
+        super(MainUserWindow, self).__init__(parent)
+        self.layout = QVBoxLayout()
+
+        iconlabel = QLabel(pixmap=QPixmap(get_asset_path("mainicon.png")))
+        self.buttonslayout = QHBoxLayout()
+        self.buttonslayout.addWidget(iconlabel)
+
+        formlayout = QFormLayout()
+
+
+        mountpathLabel = QLabel("Mount path (an empty directory):")
+        self.mountpathTxt = QLineEdit()
+
+        passwordlabel = QLabel("Password:")
+        self.passwordTxt = QLineEdit()
+        self.passwordTxt.setEchoMode(QLineEdit.Password)
+
+        formlayout.addRow(mountpathLabel, self.mountpathTxt)
+        formlayout.addRow(passwordlabel, self.passwordTxt)
+        form = QWidget()
+        form.setLayout(formlayout)
+
+        self.mountpathButton = QPushButton("Mount")
+        self.mountpathButton.clicked.connect(self.mount)
+        self.umountpathButton = QPushButton("Unmount")
+        self.umountpathButton.clicked.connect(self.unmount)
+        self.umountpathButton.hide()
+        self.buttonslayout.addWidget(form)
+
+        self.buttonslayout.addWidget(self.mountpathButton)
+        self.buttonslayout.addWidget(self.umountpathButton)
+        buttons = QWidget()
+        buttons.setLayout(self.buttonslayout)
+        self.layout.addWidget(buttons)
+        self.textarea = QTextEdit()
+        self.textarea.setReadOnly(True)
+        self.layout.addWidget(self.textarea)
+        mainw = QWidget()
+        mainw.setLayout(self.layout)
+        self.setCentralWidget(mainw)
+        self.setMinimumWidth(400)
+        self.setMinimumHeight(480)
+        self.fs = None
+        self.trayIcon = QSystemTrayIcon(self)
+        self.trayIcon.setIcon(self.style().standardIcon(QStyle.SP_ComputerIcon))
+
+        self.quitAction = QAction("Exit", self)
+        self.quitAction.triggered.connect(self.handleQuit)
+        self.trayMenu = QMenu()
+        self.trayMenu.addAction(self.quitAction)
+        self.trayIcon.setContextMenu(self.trayMenu)
+        self.trayIcon.activated.connect(self.view_toggle)
+        self.trayIcon.show()
+
+        # now check if we have a ~/.manualbox
+        if not os.path.exists(storagepath):
+            msg = f"Creating a new ManualBox storage at: {storagepath}: "
+            self.addText(msg)
+
+            key = Fernet.generate_key()
+            key_text = key.decode("utf-8")
+            self.addText(f"Here is your new key, please store it securely: {key_text}")
+            self.passwordTxt.setText(key_text)
+            # now call mount
+            self.mount()
+
+    def view_toggle(self, reason):
+        "To handle clicks on the tray icon"
+        if reason == 1:
+            self.trayMenu.show()
+            return
+        if self.isVisible():
+            self.hide()
+        else:
+            self.show()
+
+    def closeEvent(self, event):
+        "MainWindow closing event"
+        event.ignore()
+        self.hide()
+        self.trayIcon.showMessage(
+            "ManualBox",
+            "Application was minimized to Tray",
+            QSystemTrayIcon.Information,
+            2000,
         )
-    except (ValueError, InvalidToken, binascii.Error):
-        print("Wrong key for the ~/.manualbox")
-        sys.exit(-3)
+
+    def addText(self, newtext):
+        text = self.textarea.toPlainText() + "\n"
+        text += newtext
+        self.textarea.setText(text)
+
+
+
+    def handleQuit(self):
+        if self.mounted:
+            self.trayIcon.showMessage(
+            "ManualBox",
+            "Please unmount first and then quit.",
+            QSystemTrayIcon.Information,
+            5000,
+        )
+        else:
+            qApp.quit()
+
+    def msg_show(self, text):
+        self.trayIcon.showMessage("ManualBox", text, QSystemTrayIcon.Information, 2000)
+
+    def mount(self):
+
+        self.path = str(self.mountpathTxt.text())
+        if not self.path:
+            self.path = os.path.join(self.home, "secured")
+            if not os.path.exists(self.path):
+                os.mkdir(self.path)
+            self.mountpathTxt.setText(self.path)
+        password = str(self.passwordTxt.text())
+
+        try:
+            self.fs = FSThread(self.path, password)
+        except (ValueError, InvalidToken, binascii.Error):
+            self.textarea.setText("Wrong password for the ~/.manualbox storage. Please try again.")
+            return
+        self.fs.signal.connect(self.asktheuser, QtCore.Qt.BlockingQueuedConnection)
+        self.userinput.connect(self.fs.updateuserinput)
+        self.fs.start()
+        self.mountpathButton.hide()
+        self.umountpathButton.show()
+        self.passwordTxt.setEnabled(False)
+        self.mountpathTxt.setEnabled(False)
+        self.mounted = True
+        self.addText(f"Successfully decrypted and mounted at {self.path}")
+
+    def unmount(self):
+        self.fs.fs.saveondisk()
+        self.passwordTxt.setEnabled(True)
+        self.mountpathTxt.setEnabled(True)
+        self.umountpathButton.hide()
+        self.mountpathButton.show()
+        self.mounted = False
+
+        # On mac we have to unmount
+        if self.fs.fs.platform == "Darwin":
+            subprocess.check_output(["diskutil", "unmount", "force", self.path])
+        
+        self.textarea.setText("""Unmounted successfully.
+
+Encrypting the data into the storage on disk.
+Encryption and storage is successful.""")
+
+
+    def asktheuser(self, display_path):
+        logging.debug(f"ASKTHEUSER called with {display_path}")
+        self.msg_show(f"Accesing: {display_path}")
+        result = manualboxinput.main(display_path)
+        self.userinput.emit(result)
+    
+    
+
+def main():
+
+    app = QtWidgets.QApplication(sys.argv)
+    form = MainUserWindow()
+    form.show()
+    form.setWindowState(Qt.WindowState.WindowActive)
+    form.raise_()
+    app.exec_()
+
 
 
 if __name__ == "__main__":

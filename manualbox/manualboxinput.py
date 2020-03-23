@@ -15,7 +15,7 @@ def get_asset_path(file_name):
     return os.path.join(BASE_PATH, "assets", file_name)
 
 
-class MainWindow(QtWidgets.QMainWindow):
+class MainInput(QtWidgets.QDialog):
     CSS = """
             QLabel#filepath {
                 color: black;
@@ -36,7 +36,8 @@ class MainWindow(QtWidgets.QMainWindow):
     """
 
     def __init__(self, parent=None, display_path=""):
-        super(MainWindow, self).__init__(parent)
+        super(MainInput, self).__init__(parent)
+        self.setModal(True)
         self.layout = QVBoxLayout()
         iconlayout = QHBoxLayout()
         iconlabel = QLabel(pixmap=QPixmap(get_asset_path("mainicon.png")))
@@ -64,9 +65,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.layout.addWidget(buttons)
         self.okay.clicked.connect(self.okayCalled)
         self.cancel.clicked.connect(self.cancelCalled)
-        self.widget = QWidget()
-        self.widget.setLayout(self.layout)
-        self.setCentralWidget(self.widget)
+        #self.widget = QWidget()
+        #self.widget.setLayout(self.layout)
+        self.setLayout(self.layout)
+        #self.setCentralWidget(self.widget)
         self.setStyleSheet(self.CSS)
         # self.setAttribute(Qt.WA_TranslucentBackground)
         # self.setWindowFlags(Qt.FramelessWindowHint)
@@ -81,21 +83,20 @@ class MainWindow(QtWidgets.QMainWindow):
     def okayCalled(self):
         self.userstatus = "okay"
         self.hide()
-        qApp.exit(0)
 
     def cancelCalled(self):
         self.userstatus = "nope"
         self.hide()
-        qApp.exit(-1)
 
 
 def main(display_path=""):
-    app = QtWidgets.QApplication(sys.argv)
-    form = MainWindow(display_path=display_path)
+    form = MainInput(display_path=display_path)
     form.show()
     form.setWindowState(Qt.WindowState.WindowActive)
     form.raise_()
-    app.exec_()
+    form.exec()
+    while not form.isHidden():
+        pass
     return form.userstatus
 
 
