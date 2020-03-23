@@ -23,7 +23,7 @@ from pprint import pprint
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from . import manualboxinput, userwindow
+from . import manualboxinput
 
 try:
     # This is for Debian/Ubuntu
@@ -37,10 +37,13 @@ except ModuleNotFoundError:
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 import sys
 import os
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+
 
 def get_asset_path(file_name):
     "Return the absolute path for requested asset"
@@ -319,9 +322,6 @@ class ManualBoxFS(LoggingMixIn, Operations):
         if not allowforthistime:
             try:
                 result = self.callback(display_path)
-                #result = manualboxinput.main(display_path)
-                print(f"RESULT: {result}")
-                #result = "okay"
             except:
                 self.access_records[key] = (now, False)
                 return False
@@ -337,14 +337,18 @@ class ManualBoxFS(LoggingMixIn, Operations):
 class FSThread(QThread):
     signal = pyqtSignal("PyQt_PyObject")
 
-
     def __init__(self, mountpath="", password=""):
         QThread.__init__(self)
         self.mountpath = mountpath
         home = str(Path.home())
         storagepath = os.path.join(home, ".manualbox")
         key = password.encode("utf-8")
-        self.fs = ManualBoxFS(key=key, mountpath=self.mountpath, storagepath=storagepath, callback=self.ask)
+        self.fs = ManualBoxFS(
+            key=key,
+            mountpath=self.mountpath,
+            storagepath=storagepath,
+            callback=self.ask,
+        )
 
     def ask(self, display_path):
         logging.debug(f"ASK called with {display_path}")
@@ -357,19 +361,17 @@ class FSThread(QThread):
     def run(self):
         try:
             self.fuse = FUSE(
-            self.fs,
-            self.mountpath,
-            foreground=True,
-            nothreads=True,
-            allow_other=False,
+                self.fs,
+                self.mountpath,
+                foreground=True,
+                nothreads=True,
+                allow_other=False,
             )
         except (ValueError, InvalidToken, binascii.Error):
             print("Wrong key for the ~/.manualbox")
 
 
-
-
-class MainUserWindow(QtWidgets.QMainWindow):
+class MainUserWindow(QMainWindow):
     userinput = pyqtSignal("PyQt_PyObject")
     CSS = """
             QLabel#filepath {
@@ -392,6 +394,7 @@ class MainUserWindow(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
         self.home = str(Path.home())
+        self.path = os.path.join(self.home, "secured")
         storagepath = os.path.join(self.home, ".manualbox")
         self.mounted = False
         super(MainUserWindow, self).__init__(parent)
@@ -403,8 +406,7 @@ class MainUserWindow(QtWidgets.QMainWindow):
 
         formlayout = QFormLayout()
 
-
-        mountpathLabel = QLabel("Mount path (an empty directory):")
+        mountpathLabel = QLabel("Mount path  (empty for default):")
         self.mountpathTxt = QLineEdit()
 
         passwordlabel = QLabel("Password:")
@@ -486,16 +488,14 @@ class MainUserWindow(QtWidgets.QMainWindow):
         text += newtext
         self.textarea.setText(text)
 
-
-
     def handleQuit(self):
         if self.mounted:
             self.trayIcon.showMessage(
-            "ManualBox",
-            "Please unmount first and then quit.",
-            QSystemTrayIcon.Information,
-            5000,
-        )
+                "ManualBox",
+                "Please unmount first and then quit.",
+                QSystemTrayIcon.Information,
+                5000,
+            )
         else:
             qApp.quit()
 
@@ -507,15 +507,19 @@ class MainUserWindow(QtWidgets.QMainWindow):
         self.path = str(self.mountpathTxt.text())
         if not self.path:
             self.path = os.path.join(self.home, "secured")
-            if not os.path.exists(self.path):
+            try:
                 os.mkdir(self.path)
+            except FileExistsError:
+                pass
             self.mountpathTxt.setText(self.path)
         password = str(self.passwordTxt.text())
 
         try:
             self.fs = FSThread(self.path, password)
         except (ValueError, InvalidToken, binascii.Error):
-            self.textarea.setText("Wrong password for the ~/.manualbox storage. Please try again.")
+            self.textarea.setText(
+                "Wrong password for the ~/.manualbox storage. Please try again."
+            )
             return
         self.fs.signal.connect(self.asktheuser, QtCore.Qt.BlockingQueuedConnection)
         self.userinput.connect(self.fs.updateuserinput)
@@ -538,30 +542,31 @@ class MainUserWindow(QtWidgets.QMainWindow):
         # On mac we have to unmount
         if self.fs.fs.platform == "Darwin":
             subprocess.check_output(["diskutil", "unmount", "force", self.path])
-        
-        self.textarea.setText("""Unmounted successfully.
+        else:
+            subprocess.check_output(["fusermount", "-u", self.path])
+
+        self.textarea.setText(
+            """Unmounted successfully.
 
 Encrypting the data into the storage on disk.
-Encryption and storage is successful.""")
-
+Encryption and storage is successful."""
+        )
 
     def asktheuser(self, display_path):
         logging.debug(f"ASKTHEUSER called with {display_path}")
         self.msg_show(f"Accesing: {display_path}")
         result = manualboxinput.main(display_path)
         self.userinput.emit(result)
-    
-    
+
 
 def main():
-
+    logging.basicConfig(level=logging.INFO, filename="/dev/null")
     app = QtWidgets.QApplication(sys.argv)
     form = MainUserWindow()
     form.show()
     form.setWindowState(Qt.WindowState.WindowActive)
     form.raise_()
     app.exec_()
-
 
 
 if __name__ == "__main__":
