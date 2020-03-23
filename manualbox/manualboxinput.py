@@ -80,10 +80,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def okayCalled(self):
         self.userstatus = "okay"
-        qApp.exit()
+        self.hide()
+        qApp.exit(0)
 
     def cancelCalled(self):
         self.userstatus = "nope"
+        self.hide()
         qApp.exit(-1)
 
 
@@ -91,6 +93,8 @@ def main(display_path=""):
     app = QtWidgets.QApplication(sys.argv)
     form = MainWindow(display_path=display_path)
     form.show()
+    form.setWindowState(Qt.WindowState.WindowActive)
+    form.raise_()
     app.exec_()
     return form.userstatus
 

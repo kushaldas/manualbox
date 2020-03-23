@@ -281,10 +281,9 @@ class ManualBoxFS(LoggingMixIn, Operations):
         print("Encryption and storage is successful.")
 
     def manualquestion(self, path, fh):
-        if self.platform == "Darwin":
-            cmdpath = "/usr/local/bin/manualboxinput"
-        else:
-            cmdpath = "/usr/bin/manualboxinput"
+        """
+        Creates the user input dialog for the given path
+        """
         logging.debug(f"manualquestion is called for {path} with {fh}")
         display_path = os.path.join(self.mountpath, path[1:])
         key = f"{path}:{fh}"
