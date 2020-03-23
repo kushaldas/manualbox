@@ -35,9 +35,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     """
 
-    def __init__(
-        self, parent=None,
-    ):
+    def __init__(self, parent=None, display_path=""):
         super(MainWindow, self).__init__(parent)
         self.layout = QVBoxLayout()
         iconlayout = QHBoxLayout()
@@ -53,7 +51,7 @@ class MainWindow(QtWidgets.QMainWindow):
         iconlayoutWidget.setLayout(iconlayout)
 
         self.layout.addWidget(iconlayoutWidget)
-        label = QLabel(sys.argv[1])
+        label = QLabel(display_path)
         label.setObjectName("filepath")
         self.layout.addWidget(label)
         self.buttonLayout = QHBoxLayout()
@@ -78,21 +76,23 @@ class MainWindow(QtWidgets.QMainWindow):
         y_center = (screen_size.height() - window_size.height()) / 2
         self.move(x_center, y_center)
         self.setWindowTitle("Will you allow access of the following file?")
+        self.userstatus = ""
 
     def okayCalled(self):
-        print("okay")
-        sys.exit(0)
+        self.userstatus = "okay"
+        qApp.exit()
 
     def cancelCalled(self):
-        print("nope")
-        sys.exit(-1)
+        self.userstatus = "nope"
+        qApp.exit(-1)
 
 
-def main():
+def main(display_path=""):
     app = QtWidgets.QApplication(sys.argv)
-    form = MainWindow()
+    form = MainWindow(display_path=display_path)
     form.show()
     app.exec_()
+    return form.userstatus
 
 
 if __name__ == "__main__":

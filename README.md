@@ -13,12 +13,6 @@ First we will need all the dependencies:
 sudo apt install python3-cryptography python3-pyqt5 python3-fusepy
 ```
 
-Now, for development purpose, you will have to create a symlink to our user input script into `/usr/bin/`
-
-```sh
-sudo ln -s $PWD/devscripts/manualboxinput /usr/bin/manualboxinput
-```
-
 ### On macOS
 
 Install Xcode from the Mac App Store. Once it's installed, run it for the first time to set it up. Also, run this to make sure command line tools are installed: `xcode-select --install`. And finally, open Xcode, go to `Preferences > Locations`, and make sure under Command Line Tools you select an installed version from the dropdown. (This is required for installing Qt5.)
@@ -41,11 +35,6 @@ Then install the tool locally:
 poetry install
 ```
 
-Now, for development purpose, you will have to create a symlink to our user input script into `/usr/local/bin/`
-
-```sh
-sudo ln -s $PWD/devscripts/manualboxinput /usr/local/bin/manualboxinput
-```
 
 Note: On Mac, the system will ask for user input when any tool will try to open the file for both reading and writing.
 

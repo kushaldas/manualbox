@@ -2,7 +2,6 @@
 from __future__ import print_function, absolute_import, division
 
 import logging
-import subprocess
 
 import os
 import sys
@@ -22,6 +21,8 @@ import binascii
 from pprint import pprint
 
 from cryptography.fernet import Fernet, InvalidToken
+
+from . import manualboxinput
 
 try:
     # This is for Debian/Ubuntu
@@ -300,11 +301,11 @@ class ManualBoxFS(LoggingMixIn, Operations):
         # if allowed then continue reading
         if not allowforthistime:
             try:
-                result = subprocess.check_output([cmdpath, display_path])
+                result = manualboxinput.main(display_path)
             except:
                 self.access_records[key] = (now, False)
                 return False
-            if result != b"okay\n":
+            if result != "okay":
                 self.access_records[key] = (now, False)
                 return False
 
@@ -346,4 +347,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
