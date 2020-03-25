@@ -515,7 +515,7 @@ class MainUserWindow(QMainWindow):
         self.trayIcon.showMessage("ManualBox", text, QSystemTrayIcon.Information, 2000)
 
     def mount(self):
-
+        "Mounts the provided path"
         self.path = str(self.mountpathTxt.text())
         if not self.path:
             self.path = os.path.join(self.home, "secured")
@@ -560,6 +560,7 @@ class MainUserWindow(QMainWindow):
         self.repaint()
 
     def unmount(self):
+        "Unmounts the filesystem"
         self.fs.fs.saveondisk()
         self.passwordTxt.setEnabled(True)
         self.mountpathTxt.setEnabled(True)
