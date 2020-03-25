@@ -382,6 +382,10 @@ class MainUserWindow(QMainWindow):
                 background-color: rgb(255,255,255);
                 font-size: 20px;
             }
+            QPushButton#umountpathButton {
+                background-color: rgb(255,255,255);
+                font-size: 20px;
+            }
             QPushButton {
                 background-color: rgb(255,255,255);
             }
@@ -420,8 +424,12 @@ class MainUserWindow(QMainWindow):
         self.mountpathButton = QPushButton("Mount")
         self.mountpathButton.setObjectName("mountpathButton")
         self.mountpathButton.setFixedHeight(60)
+        self.mountpathButton.setFixedWidth(100)
         self.mountpathButton.clicked.connect(self.mount)
         self.umountpathButton = QPushButton("Unmount")
+        self.umountpathButton.setObjectName("umountpathButton")
+        self.umountpathButton.setFixedHeight(60)
+        self.umountpathButton.setFixedWidth(100)
         self.umountpathButton.clicked.connect(self.unmount)
         self.umountpathButton.hide()
         self.buttonslayout.addWidget(form)
@@ -451,6 +459,7 @@ class MainUserWindow(QMainWindow):
         self.trayIcon.activated.connect(self.view_toggle)
         self.trayIcon.show()
         self.setStyleSheet(self.CSS)
+        self.setWindowTitle("ManualBox")
 
         # now check if we have a ~/.manualbox
         if not os.path.exists(storagepath):
