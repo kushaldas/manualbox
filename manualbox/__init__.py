@@ -24,6 +24,7 @@ from pprint import pprint
 from cryptography.fernet import Fernet, InvalidToken
 
 from . import manualboxinput
+from .utils import get_asset_path
 
 try:
     # This is for Debian/Ubuntu
@@ -43,11 +44,6 @@ import sys
 import os
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-
-
-def get_asset_path(file_name):
-    "Return the absolute path for requested asset"
-    return os.path.join(BASE_PATH, "assets", file_name)
 
 
 class ManualBoxFS(LoggingMixIn, Operations):
@@ -436,8 +432,8 @@ class MainUserWindow(QMainWindow):
         mainw = QWidget()
         mainw.setLayout(self.layout)
         self.setCentralWidget(mainw)
-        self.setMinimumWidth(400)
-        self.setMinimumHeight(480)
+        self.setMinimumWidth(480)
+        self.setMinimumHeight(400)
         self.fs = None
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setIcon(self.style().standardIcon(QStyle.SP_ComputerIcon))
@@ -530,6 +526,8 @@ class MainUserWindow(QMainWindow):
         self.mountpathTxt.setEnabled(False)
         self.mounted = True
         self.addText(f"Successfully decrypted and mounted at {self.path}")
+        # On mac the UI is not updating properly otherwise
+        self.repaint()
 
     def unmount(self):
         self.fs.fs.saveondisk()
@@ -551,11 +549,13 @@ class MainUserWindow(QMainWindow):
 Encrypting the data into the storage on disk.
 Encryption and storage is successful."""
         )
+        self.repaint()
 
     def asktheuser(self, display_path):
         logging.debug(f"ASKTHEUSER called with {display_path}")
         self.msg_show(f"Accesing: {display_path}")
         result = manualboxinput.main(display_path)
+        # On mac the UI is not updating properly otherwise
         self.userinput.emit(result)
 
 

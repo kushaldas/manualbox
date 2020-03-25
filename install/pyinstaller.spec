@@ -10,7 +10,10 @@ a = Analysis(
     pathex=['.'],
     binaries=None,
     datas=[
-        ("../manualbox/assets/mainicon.png", "manualbox")
+        ("../manualbox/assets/mainicon.png", "share/assets"),
+        ("../manualbox/assets/check.png", "share/assets"),
+        ("../manualbox/assets/cross.png", "share/assets"),
+
     ],
     hiddenimports=[],
     hookspath=[],

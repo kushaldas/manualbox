@@ -7,12 +7,7 @@ from PyQt5.QtCore import *
 import sys
 import os
 
-BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-
-
-def get_asset_path(file_name):
-    "Return the absolute path for requested asset"
-    return os.path.join(BASE_PATH, "assets", file_name)
+from .utils import get_asset_path
 
 
 class MainInput(QtWidgets.QDialog):
@@ -65,10 +60,10 @@ class MainInput(QtWidgets.QDialog):
         self.layout.addWidget(buttons)
         self.okay.clicked.connect(self.okayCalled)
         self.cancel.clicked.connect(self.cancelCalled)
-        #self.widget = QWidget()
-        #self.widget.setLayout(self.layout)
+        # self.widget = QWidget()
+        # self.widget.setLayout(self.layout)
         self.setLayout(self.layout)
-        #self.setCentralWidget(self.widget)
+        # self.setCentralWidget(self.widget)
         self.setStyleSheet(self.CSS)
         # self.setAttribute(Qt.WA_TranslucentBackground)
         # self.setWindowFlags(Qt.FramelessWindowHint)
