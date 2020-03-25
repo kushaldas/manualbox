@@ -13,6 +13,7 @@ a = Analysis(
         ("../manualbox/assets/mainicon.png", "share/assets"),
         ("../manualbox/assets/check.png", "share/assets"),
         ("../manualbox/assets/cross.png", "share/assets"),
+        ("../manualbox/assets/trayicon.png", "share/assets"),
 
     ],
     hiddenimports=[],
