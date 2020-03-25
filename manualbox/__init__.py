@@ -24,6 +24,7 @@ from pprint import pprint
 from cryptography.fernet import Fernet, InvalidToken
 
 from . import manualboxinput
+from .widgets import MountEdit
 from .utils import get_asset_path
 
 try:
@@ -410,7 +411,7 @@ class MainUserWindow(QMainWindow):
         formlayout = QFormLayout()
 
         mountpathLabel = QLabel("Mount path  (empty for default):")
-        self.mountpathTxt = QLineEdit()
+        self.mountpathTxt = MountEdit()
 
         passwordlabel = QLabel("Password:")
         self.passwordTxt = QLineEdit()
