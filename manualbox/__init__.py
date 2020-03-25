@@ -441,7 +441,7 @@ class MainUserWindow(QMainWindow):
         self.setFixedHeight(480)
         self.fs = None
         self.trayIcon = QSystemTrayIcon(self)
-        self.trayIcon.setIcon(self.style().standardIcon(QStyle.SP_ComputerIcon))
+        self.trayIcon.setIcon(QIcon(QPixmap(get_asset_path("trayicon.png"))))
 
         self.quitAction = QAction("Exit", self)
         self.quitAction.triggered.connect(self.handleQuit)
