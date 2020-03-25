@@ -524,6 +524,20 @@ class MainUserWindow(QMainWindow):
             except FileExistsError:
                 pass
             self.mountpathTxt.setText(self.path)
+
+        # Now verify that the mount path exists
+        if not os.path.exists(self.path):
+            self.textarea.setText(
+                f'The mount path <font color="red"><b>{self.path}</b></font> does not exist.'
+            )
+            return
+        # Verify that the mount path is empty
+        if len(os.listdir(self.path)) != 0:
+            self.textarea.setText(
+                f'The mount path <font color="red"><b>{self.path}</b></font> is not empty. Please select an empty directory.'
+            )
+            return
+
         password = str(self.passwordTxt.text())
 
         try:
