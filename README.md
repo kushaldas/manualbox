@@ -1,7 +1,10 @@
 # ManualBox
 
-ManualBox is a command line for the desktop users to create/mount an userspace file system, where reading
-of any file will require user input via a GUI tool.
+ManualBox is a tool for desktop users (Linux and Mac) to create/mount an userspace file system, where reading
+of any file will require user input from this tool.
+
+
+![Allow or deny access](https://github.com/kushaldas/manualbox/raw/master/static/allow_deny.png)
 
 ## Installation/Usage for development purpose
 
