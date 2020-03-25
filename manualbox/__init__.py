@@ -562,7 +562,8 @@ class MainUserWindow(QMainWindow):
             """Unmounted successfully.
 
 Encrypting the data into the storage on disk.
-Encryption and storage is successful."""
+Encryption and storage is successful.
+To use again, please click on the Mount button."""
         )
         self.repaint()
 
