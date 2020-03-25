@@ -35,33 +35,12 @@ Then install the tool locally:
 poetry install
 ```
 
-
 Note: On Mac, the system will ask for user input when any tool will try to open the file for both reading and writing.
+
 
 ### Usage
 
-When you run the tool for the first time, it will create a new encryption key for your `~/.manualbox` file.
-Please store it securely somewhere.
-
-```sh
-./devscripts/manualbox /path/where/we/will/mount
-```
-
-Example, to mount at `/home/kdas/secured` I will execute:
-
-```sh
-./devscripts/manualbox /home/kdas/secured
-```
-
-On macOS
-
-```sh
-poetry run ./devscripts/manualbox /User/kdas/secured
-```
-
-In the first run, it will give you the key for your encrypted storage, keep the key safe as you can not access your files without the key.
-
-Note: The current implementation of the filesystem can only store files in the top level directory, this will be fixed in the coming days.
+Read the [wiki](https://github.com/kushaldas/manualbox/wiki) for the latest usage guide.
 
 ## License
 
