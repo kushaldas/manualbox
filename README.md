@@ -8,7 +8,7 @@ of any file will require user input from this tool.
 
 ## Installation & Usage
 
-Read the [wiki](https://github.com/kushaldas/manualbox/wiki) for the latest usage guide.
+Read the [wiki](https://github.com/kushaldas/manualbox/wiki) for the latest installation and usage guide.
 
 
 ## Development requirements
