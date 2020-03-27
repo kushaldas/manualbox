@@ -88,7 +88,6 @@ class ManualBoxFS(LoggingMixIn, Operations):
                 self.files = files
                 self.data = data
         self.error = False
-        print(f"\nYour storage is now mounted at {mountpath}. Press Ctrl+C to unmount.")
 
     def chmod(self, path, mode):
         self.files[path]["st_mode"] &= 0o770000
@@ -481,14 +480,17 @@ class MainUserWindow(QMainWindow):
 
     def closeEvent(self, event):
         "MainWindow closing event"
-        event.ignore()
-        self.hide()
-        self.trayIcon.showMessage(
-            "ManualBox",
-            "Application was minimized to Tray",
-            QSystemTrayIcon.Information,
-            2000,
-        )
+        if not self.mounted:
+            qApp.quit()
+        else:
+            event.ignore()
+            self.hide()
+            self.trayIcon.showMessage(
+                "ManualBox",
+                "Application was minimized to Tray",
+                QSystemTrayIcon.Information,
+                2000,
+            )
 
     def addText(self, newtext):
         text = self.textarea.toPlainText() + "\n"
