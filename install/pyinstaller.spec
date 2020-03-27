@@ -50,7 +50,7 @@ if p == 'Darwin':
     app = BUNDLE(
         coll,
         name='ManualBox.app',
-        icon=None,
+        icon="main.icns",
         bundle_identifier='in.kushaldas.manualbox',
         info_plist={
             'CFBundleShortVersionString': version,

@@ -376,9 +376,6 @@ class MainUserWindow(QMainWindow):
                 font-size: 25px;
                 background-color: rgb(255,255,255);
             }
-            QLabel {
-                background-color: rgb(255,255,255);
-            }
             QPushButton#mountpathButton {
                 background-color: rgb(255,255,255);
                 font-size: 20px;
@@ -390,9 +387,7 @@ class MainUserWindow(QMainWindow):
             QPushButton {
                 background-color: rgb(255,255,255);
             }
-            QWidget {
-                background-color: rgb(255,255,255);
-            }
+
 
     """
 
