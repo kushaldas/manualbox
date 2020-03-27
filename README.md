@@ -6,7 +6,12 @@ of any file will require user input from this tool.
 
 ![Allow or deny access](https://github.com/kushaldas/manualbox/raw/master/static/allow_deny.png)
 
-## Installation/Usage for development purpose
+## Installation & Usage
+
+Read the [wiki](https://github.com/kushaldas/manualbox/wiki) for the latest usage guide.
+
+
+## Development requirements
 
 First we will need all the dependencies:
 
@@ -14,6 +19,12 @@ First we will need all the dependencies:
 
 ```sh
 sudo apt install python3-cryptography python3-pyqt5 python3-fusepy
+```
+
+### On Fedora
+
+```sh
+sudo dnf install python3-cryptography python3-qt5 python3-fusepy -y
 ```
 
 ### On macOS
@@ -41,9 +52,7 @@ poetry install
 Note: On Mac, the system will ask for user input when any tool will try to open the file for both reading and writing.
 
 
-### Usage
 
-Read the [wiki](https://github.com/kushaldas/manualbox/wiki) for the latest usage guide.
 
 ## License
 
