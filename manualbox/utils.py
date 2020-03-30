@@ -10,7 +10,7 @@ def get_asset_path(file_name):
     path = os.path.join(BASE_PATH, "assets", file_name)
     if os.path.exists(path):
         return path
-    # This should work in Linux 
+    # This should work in Linux
     path = os.path.join(sys.prefix, "share/manualbox/assets", file_name)
 
     if os.path.exists(path):

@@ -585,7 +585,9 @@ class MainUserWindow(QMainWindow):
             else:
                 subprocess.check_output(["fusermount", "-u", self.path])
         except subprocess.CalledProcessError:
-            self.addText("Error while unmounting, please close any file browser opened on the mounted path.")
+            self.addText(
+                "Error while unmounting, please close any file browser opened on the mounted path."
+            )
         self.textarea.setText(
             """Unmounted successfully.
 

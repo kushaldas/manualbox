@@ -112,4 +112,3 @@ if __name__ == "__main__":
     if len(sys.argv) == 3:
         app = QtWidgets.QApplication(sys.argv)
         main(sys.argv[1], sys.argv[2])
-
