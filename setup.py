@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="manualbox",
-    version="0.1.0",
+    version="0.2.0",
     description="A secure storage as file system which requires user input to access files.",
     long_description="A simple testing system which can be maintained.",
     platforms=["Linux", "Darwin"],
