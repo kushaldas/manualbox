@@ -3,7 +3,7 @@
 ManualBox is a tool for desktop users (Linux and Mac) to create/mount an userspace file system, where reading
 of any file will require user input from this tool.
 
-![Allow or deny access](https://kushaldas.in/images/simple_manualbox2.gif)
+![Allow or deny access](https://kushaldas.in/images/simple_manualbox_v0.2.0.gif)
 
 ## Installation & Usage
 
