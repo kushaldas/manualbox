@@ -21,6 +21,7 @@ import binascii
 
 from pprint import pprint
 
+import psutil
 from cryptography.fernet import Fernet, InvalidToken
 
 from . import manualboxinput
@@ -29,9 +30,9 @@ from .utils import get_asset_path
 
 try:
     # This is for Debian/Ubuntu
-    from fusepy import FUSE, FuseOSError, Operations, LoggingMixIn
+    from fusepy import FUSE, FuseOSError, Operations, LoggingMixIn, fuse_get_context
 except ModuleNotFoundError:
-    from fuse import FUSE, FuseOSError, Operations, LoggingMixIn
+    from fuse import FUSE, FuseOSError, Operations, LoggingMixIn, fuse_get_context
 
     from PyQt5 import QtGui, QtWidgets, QtCore
 
@@ -301,9 +302,22 @@ class ManualBoxFS(LoggingMixIn, Operations):
         """
         Creates the user input dialog for the given path
         """
+        process_name = ""
         logging.debug(f"manualquestion is called for {path} with {fh}")
         display_path = os.path.join(self.mountpath, path[1:])
-        key = f"{path}:{fh}"
+
+        # Now let us find the process information
+        uid, gid, pid = fuse_get_context()
+        try:
+            # We don't know if the process is still there or not
+            p = psutil.Process(pid=pid)
+            process_name = p.name()
+        except Exception as err:
+            print(err)
+            # The process is not there, return now
+            return False
+
+        key = f"{path}:{pid}"
         now = time()
         allowforthistime = False
         if key in self.access_records:
@@ -317,7 +331,7 @@ class ManualBoxFS(LoggingMixIn, Operations):
         # if allowed then continue reading
         if not allowforthistime:
             try:
-                result = self.callback(display_path)
+                result = self.callback(display_path, process_name)
             except:
                 self.access_records[key] = (now, False)
                 return False
@@ -331,7 +345,7 @@ class ManualBoxFS(LoggingMixIn, Operations):
 
 
 class FSThread(QThread):
-    signal = pyqtSignal("PyQt_PyObject")
+    signal = pyqtSignal("PyQt_PyObject", "PyQt_PyObject")
 
     def __init__(self, mountpath="", password=""):
         QThread.__init__(self)
@@ -346,9 +360,9 @@ class FSThread(QThread):
             callback=self.ask,
         )
 
-    def ask(self, display_path):
-        logging.debug(f"ASK called with {display_path}")
-        self.signal.emit(display_path)
+    def ask(self, display_path, process_name):
+        logging.debug(f"ASK called with {display_path} and {process_name}")
+        self.signal.emit(display_path, process_name)
         return self.result
 
     def updateuserinput(self, result):
@@ -565,12 +579,13 @@ class MainUserWindow(QMainWindow):
         self.mountpathButton.show()
         self.mounted = False
 
-        # On mac we have to unmount
-        if self.fs.fs.platform == "Darwin":
-            subprocess.check_output(["diskutil", "unmount", "force", self.path])
-        else:
-            subprocess.check_output(["fusermount", "-u", self.path])
-
+        try:
+            if self.fs.fs.platform == "Darwin":
+                subprocess.check_output(["diskutil", "unmount", "force", self.path])
+            else:
+                subprocess.check_output(["fusermount", "-u", self.path])
+        except subprocess.CalledProcessError:
+            self.addText("Error while unmounting, please close any file browser opened on the mounted path.")
         self.textarea.setText(
             """Unmounted successfully.
 
@@ -580,10 +595,10 @@ To use again, please click on the Mount button."""
         )
         self.repaint()
 
-    def asktheuser(self, display_path):
+    def asktheuser(self, display_path, process_name):
         logging.debug(f"ASKTHEUSER called with {display_path}")
         self.msg_show(f"Accesing: {display_path}")
-        result = manualboxinput.main(display_path)
+        result = manualboxinput.main(display_path, process_name)
         # On mac the UI is not updating properly otherwise
         self.userinput.emit(result)
 

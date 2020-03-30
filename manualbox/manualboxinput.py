@@ -7,6 +7,7 @@ from PyQt5.QtCore import *
 import sys
 import os
 
+
 from .utils import get_asset_path
 
 
@@ -14,11 +15,15 @@ class MainInput(QtWidgets.QDialog):
     CSS = """
             QLabel#filepath {
                 color: black;
-                font-size: 25px;
+                font-size: 20px;
+                background-color: rgb(255,255,255);
+            }
+            QLabel#processname {
                 background-color: rgb(255,255,255);
             }
             QLabel {
                 background-color: rgb(255,255,255);
+                color: rgb(0,0,0);
             }
 
             QPushButton {
@@ -30,7 +35,7 @@ class MainInput(QtWidgets.QDialog):
 
     """
 
-    def __init__(self, parent=None, display_path=""):
+    def __init__(self, parent=None, display_path="", process_name=""):
         super(MainInput, self).__init__(parent)
         self.setModal(True)
         self.layout = QVBoxLayout()
@@ -47,6 +52,14 @@ class MainInput(QtWidgets.QDialog):
         iconlayoutWidget.setLayout(iconlayout)
 
         self.layout.addWidget(iconlayoutWidget)
+        if process_name:
+            process_txt = f'The process <span style="color:#aa0000">{process_name}</span> is asking to access:'
+            process_label = QLabel()
+            process_label.setTextFormat(Qt.RichText)
+            process_label.setText(process_txt)
+            process_label.setObjectName("processname")
+            self.layout.addWidget(process_label)
+
         label = QLabel(display_path)
         label.setObjectName("filepath")
         self.layout.addWidget(label)
@@ -84,8 +97,8 @@ class MainInput(QtWidgets.QDialog):
         self.hide()
 
 
-def main(display_path=""):
-    form = MainInput(display_path=display_path)
+def main(display_path="", process_name=""):
+    form = MainInput(display_path=display_path, process_name=process_name)
     form.show()
     form.setWindowState(Qt.WindowState.WindowActive)
     form.raise_()
@@ -96,4 +109,7 @@ def main(display_path=""):
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) == 3:
+        app = QtWidgets.QApplication(sys.argv)
+        main(sys.argv[1], sys.argv[2])
+
