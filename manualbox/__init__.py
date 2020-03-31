@@ -577,7 +577,7 @@ class MainUserWindow(QMainWindow):
 
         try:
             if self.fs.fs.platform == "Darwin":
-                subprocess.check_output(["diskutil", "unmount", "force", self.path])
+                subprocess.check_output(["diskutil", "unmount", self.path])
             else:
                 subprocess.check_output(["fusermount", "-u", self.path])
         except subprocess.CalledProcessError:
