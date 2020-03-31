@@ -258,8 +258,10 @@ class ManualBoxFS(LoggingMixIn, Operations):
         self.files[path]["st_size"] = length
 
     def unlink(self, path):
-        self.data.pop(path)
-        self.files.pop(path)
+        if path in self.data:
+            self.data.pop(path)
+        if path in self.files:
+            self.files.pop(path)
 
     def utimens(self, path, times=None):
         now = time()
