@@ -27,6 +27,7 @@ from cryptography.fernet import Fernet, InvalidToken
 from . import manualboxinput
 from .widgets import MountEdit
 from .utils import get_asset_path
+from .version import VERSION
 
 try:
     # This is for Debian/Ubuntu
@@ -468,7 +469,7 @@ class MainUserWindow(QMainWindow):
         self.trayIcon.activated.connect(self.view_toggle)
         self.trayIcon.show()
         self.setStyleSheet(self.CSS)
-        self.setWindowTitle("ManualBox")
+        self.setWindowTitle(f"ManualBox {VERSION}")
 
         # now check if we have a ~/.manualbox
         if not os.path.exists(storagepath):

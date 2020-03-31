@@ -3,7 +3,7 @@
 import platform
 p = platform.system()
 
-version = "0.2.0"
+version = "0.2.1"
 
 a = Analysis(
     ['scripts/manualbox'],
