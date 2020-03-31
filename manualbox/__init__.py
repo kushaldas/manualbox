@@ -573,11 +573,6 @@ class MainUserWindow(QMainWindow):
     def unmount(self):
         "Unmounts the filesystem"
         self.fs.fs.saveondisk()
-        self.passwordTxt.setEnabled(True)
-        self.mountpathTxt.setEnabled(True)
-        self.umountpathButton.hide()
-        self.mountpathButton.show()
-        self.mounted = False
 
         try:
             if self.fs.fs.platform == "Darwin":
@@ -586,8 +581,9 @@ class MainUserWindow(QMainWindow):
                 subprocess.check_output(["fusermount", "-u", self.path])
         except subprocess.CalledProcessError:
             self.addText(
-                "Error while unmounting, please close any file browser opened on the mounted path."
+                "Error while unmounting, please close any file browser opened on the mounted path and then try again."
             )
+            return
         self.textarea.setText(
             """Unmounted successfully.
 
@@ -595,6 +591,11 @@ Encrypting the data into the storage on disk.
 Encryption and storage is successful.
 To use again, please click on the Mount button."""
         )
+        self.passwordTxt.setEnabled(True)
+        self.mountpathTxt.setEnabled(True)
+        self.umountpathButton.hide()
+        self.mountpathButton.show()
+        self.mounted = False
         self.repaint()
 
     def asktheuser(self, display_path, process_name):
