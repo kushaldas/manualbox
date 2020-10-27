@@ -9,7 +9,7 @@ license = "GPLv3+"
 python = "^3.7"
 PyQt5 = "^5.14.1"
 fusepy = "^3.0.1"
-cryptography = "^2.8.0"
+cryptography = "^3.2"
 psutil = "^5.7.0"
 
 
